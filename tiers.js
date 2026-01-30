@@ -181,6 +181,20 @@ function create_img_with_src(src) {
 	    // Grabs the index of the item's original placement prior to being dragged.
 		old_item_index = get_item_index(dragged_image)
 	});
+
+	// On CTRL + LEFT CLICK, create image dialog, for viewing the image in full size
+	img.addEventListener('click', (e) => {
+		e.ctrlKey && open_image_dialog(e.target.src)
+	});
+	// Also on MIDDLE CLICK
+	img.addEventListener('auxclick', (e) => {
+		e.button === 1 && open_image_dialog(e.target.src)
+	});
+	// Also on RIGHT CLICK
+	img.addEventListener('contextmenu', (e) => {
+		e.preventDefault(); open_image_dialog(e.target.src)
+	});
+
 	return img;
 }
 
@@ -729,4 +743,67 @@ async function try_load_tierlist_json () {
 			load_tierlist(result);
 		} catch (e) { console.error(e); }
 	}
+}
+
+function prepare_image_dialog() {
+	const UNIQUE_ID = "image_dialog";
+
+	let dialog = document.getElementById(UNIQUE_ID);
+
+	if (dialog !== null) {
+		return dialog;
+	}
+
+	dialog = document.createElement('dialog');
+	dialog.id = UNIQUE_ID;
+	dialog.style.padding = '0px';
+	dialog.style.border = 'none';
+	dialog.style.backgroundColor = 'transparent';
+	dialog.style.outline = 'none';
+	dialog.style.display = 'flex';
+
+	// Close dialog when clicking outside of the image
+	dialog.addEventListener('click', (e) => {
+		if(e.target === dialog) {
+			dialog.close();
+		}
+	});
+
+	// Clean self on close
+	dialog.addEventListener('close', () => dialog.innerHTML = '');
+
+	document.body.appendChild(dialog);
+
+	return dialog;
+}
+
+function open_image_dialog(img_src) {
+	const dialog = prepare_image_dialog();
+
+	const wrapper = document.createElement('div');
+	wrapper.style.display = 'flex';
+	wrapper.style.justifyContent = 'center';
+	wrapper.style.alignItems = 'center';
+	wrapper.style.padding = '20px';
+	wrapper.style.maxWidth = '95vw';
+	wrapper.style.maxHeight = '95vh';
+
+	// Also click dialog by clicking on wrapper directly
+	wrapper.addEventListener('click', (e) => {
+		if(e.target === wrapper) {
+			dialog.close();
+		}
+	});
+
+	const img = document.createElement('img');
+	img.src = img_src;
+	img.style.maxWidth = '100%';
+	img.style.maxHeight = '100%';
+	img.style.border = '5px solid rgba(0,0,0,0.5)';
+
+	wrapper.appendChild(img);
+
+	dialog.appendChild(wrapper);
+
+	dialog.showModal();
 }
